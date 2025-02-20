@@ -63,19 +63,17 @@ Now, Nginx should be installed and running on all EC2 instances.
 
 ## Step 3: Set Up Two Backend Servers
 
-### 3.1 Purpose of Backend Servers
-
 The backend servers will serve simple web pages, which will be used to verify that the load balancer is working correctly.
 
-### 3.2 Configure Backend Server 1
+### 3.1 Configure Backend Server 1
 
-On **Backend Server 1**, navigate to the Nginx HTML directory:
+On **Backend Server 1**, navigate to the directory where the default Nginx `index.html` file is located:
 
 ```bash
 cd /usr/share/nginx/html
 ```
 
-Replace `index.html` with:
+Replace the existing content of Replace `index.html` with the following:
 
 ```html
 <html>
@@ -86,9 +84,9 @@ Replace `index.html` with:
 </html>
 ```
 
-### 3.3 Configure Backend Server 2
+### 3.2 Configure Backend Server 2
 
-On **Backend Server 2**, navigate to the same directory and replace `index.html` with:
+On **Backend Server 2**, navigate to the same directory where the default Nginx `index.html` file is located and replace the content with::
 
 ```html
 <html>
@@ -99,9 +97,9 @@ On **Backend Server 2**, navigate to the same directory and replace `index.html`
 </html>
 ```
 
-### 3.4 Test Backend Servers
+### 3.3 Test Backend Servers
 
-Ensure each backend server is running by visiting its respective public IP address in a browser.
+Ensure each backend server is running by visiting its respective public IP address in a browser. Each backend server will have a unique HTML page to indicate which server is responding to requests. This will be used to verify that the load balancer is working correctly
 
 <br>
 
@@ -113,7 +111,7 @@ Find the **Private IP addresses** of Backend Server 1 and Backend Server 2 in th
 
 ### 4.2 Configure Nginx on Reverse Proxy
 
-Edit the Nginx config file:
+On the **Reverse Proxy EC2 instance**, edit the Nginx config file:
 
 ```bash
 sudo nano /etc/nginx/nginx.conf
@@ -121,7 +119,7 @@ sudo nano /etc/nginx/nginx.conf
 
 ### 4.3 Update Nginx Configuration
 
-Insert the following inside the `http {}` block:
+Add the following configuration inside the `http {}` block, replacing `<PRIVATE IP of Backend Server 1>` and `<PRIVATE IP of Backend Server 2>` with the actual private IPs:
 
 ```nginx
 upstream backendserver {
@@ -153,7 +151,12 @@ Test the load balancer by visiting the public IP of the Reverse Proxy server.
 
 ## Step 5: Set Up Status Page
 
+The status page will be used to monitor the availability of the backend servers and display whether they are online or offline.
+
+
 ### 5.1 Install Cron and Create Script
+
+On your **Status Page EC2 instance**, install cron if it is not installed:
 
 ```bash
 sudo yum install cronie -y
@@ -161,13 +164,15 @@ sudo systemctl enable crond
 sudo systemctl start crond
 ```
 
-Create the status script:
+### 5.2 Create and Configure Script
+
+Create the script to check backend server statuses:
 
 ```bash
 sudo nano /usr/local/bin/status.sh
 ```
 
-Paste the script:
+Paste the following script, replacing `<PRIVATE IP of Backend Server 1>` and `<PRIVATE IP of Backend Server 2>` with the actual private IPs:
 
 ```bash
 #!/bin/bash
@@ -205,13 +210,15 @@ Make it executable:
 sudo chmod +x /usr/local/bin/status.sh
 ```
 
-Set up a cron job:
+### 5.3 Schedule Script Execution
+
+Set up a cron job to run the script every minute:
 
 ```bash
 sudo crontab -e
 ```
 
-Add:
+Add the following line:
 
 ```bash
 * * * * * /usr/local/bin/status.sh
@@ -222,6 +229,8 @@ Add:
 ## Step 6: Set Up Subdomains with Cloudflare
 
 ### 6.1 Configure Cloudflare DNS
+
+Cloudflare will handle DNS resolution for your domain.
 
 1. Log in to **Cloudflare** and add your domain.
 2. Navigate to **DNS settings**.
@@ -239,21 +248,21 @@ Once propagated, Cloudflare will resolve your subdomain requests correctly.
 
 ## Step 7: Set Up SSL with Let's Encrypt
 
-### 7.1 Install Certbot
+### 7.1 Install Certbot (On Reverse Proxy EC2 Instance)
 
 ```bash
 sudo yum install -y certbot python2-certbot-nginx
 ```
 
-### 7.2 Obtain SSL Certificates
+### 7.2 Obtain SSL Certificate
 
 ```bash
-sudo certbot --nginx -d app.<YOUR DOMAIN> -d status.<YOUR DOMAIN>
+sudo certbot --nginx -d app.<YOUR DOMAIN>
 ```
 
 ### 7.3 Verify SSL Configuration
 
-Ensure that Let's Encrypt has correctly modified the Nginx configuration for HTTPS.
+Ensure that Let's Encrypt has correctly modified the Nginx configuration for HTTPS. Certbot should automatically configure SSL settings, but you can verify by checking the configuration file.
 
 Restart Nginx:
 
