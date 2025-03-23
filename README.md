@@ -119,7 +119,7 @@ sudo nano /etc/nginx/nginx.conf
 
 ### 4.3 Update Nginx Configuration
 
-Add the following configuration inside the `http {}` block, replacing `<PRIVATE IP of Backend Server 1>` and `<PRIVATE IP of Backend Server 2>` with the actual private IPs:
+Add the following configuration inside the `http {}` block, replacing `<PRIVATE IP of Backend Server 1>` & `<PRIVATE IP of Backend Server 2>` with the actual private IPs, and also `<YOUR DOMAIN>` with your actual domain name (that you will purchase later in Step 6):
 
 ```nginx
 upstream backendserver {
@@ -129,7 +129,7 @@ upstream backendserver {
 
 server {
     listen 80;
-    server_name app.<YOUR DOMAIN>; # Replace with your actual domain name
+    server_name app.<YOUR DOMAIN>;
     
     location / {
         proxy_pass http://backendserver/;
@@ -232,7 +232,7 @@ Add the following line:
 
 Cloudflare will handle DNS resolution for your domain.
 
-1. Log in to **Cloudflare** and add your domain.
+1. Log in to **Cloudflare** and purchase your domain.
 2. Navigate to **DNS settings**.
 3. Create:
    - **A Record** for `app.<YOUR DOMAIN>` → Public IP of Reverse Proxy.
